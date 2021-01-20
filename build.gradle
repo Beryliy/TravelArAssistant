@@ -6,6 +6,7 @@ buildscript {
     ext.material_version = '1.2.1'
     ext.constraint_layout_version = '2.0.4'
     ext.ar_core_version = '1.22.0'
+    ext.dagger_version = '2.31'
 
     repositories {
         google()
