@@ -3,6 +3,7 @@
     package="com.ninjaturtles.travelarassistant">
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-feature android:name="android.hardware.camera.ar" />
 
     <application
