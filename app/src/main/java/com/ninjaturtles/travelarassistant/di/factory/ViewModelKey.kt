@@ -1,4 +1,4 @@
-package com.ninjaturtles.travelarassistant.di
+package com.ninjaturtles.travelarassistant.di.factory
 
 import androidx.lifecycle.ViewModel
 import dagger.MapKey

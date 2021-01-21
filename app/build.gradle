@@ -1,12 +1,15 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-android-extensions'
     id 'kotlin-kapt'
 }
 
 android {
     compileSdkVersion 30
     buildToolsVersion "29.0.3"
+
+    buildFeatures {dataBinding true}
 
     defaultConfig {
         applicationId "com.ninjaturtles.travelarassistant"
@@ -15,6 +18,7 @@ android {
         versionCode 1
         versionName "1.0"
 
+        buildConfigField 'String', "MAPBOX_DOWNLOADS_TOKEN", "\"${MAPBOX_DOWNLOADS_TOKEN}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -40,13 +44,14 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$appcompat_version"
     implementation "com.google.android.material:material:$material_version"
     implementation "androidx.constraintlayout:constraintlayout:$constraint_layout_version"
-    implementation "com.google.ar:core:$ar_core_version"
     implementation "com.google.dagger:dagger:$dagger_version"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     kapt "com.google.dagger:dagger-compiler:$dagger_version"
     implementation "androidx.navigation:navigation-fragment-ktx:$navigation_version"
     implementation "androidx.navigation:navigation-ui-ktx:$navigation_version"
     implementation "com.mapbox.mapboxsdk:mapbox-android-sdk:$mapbox_version"
+    implementation "com.google.android.gms:play-services-location:$location_version"
+    implementation "com.mapbox.mapboxsdk:mapbox-android-plugin-annotation-v9:$mapbox_anotation_plagin_version"
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
