@@ -5,5 +5,5 @@ import java.lang.Exception
 
 sealed class LocationResult {
     data class Success(val location: LocationEngineResult?): LocationResult()
-    data class Failure(val exception: Exception)
+    data class Failure(val exception: Exception): LocationResult()
 }
