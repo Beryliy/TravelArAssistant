@@ -2,6 +2,7 @@ package com.ninjaturtles.travelarassistant.di.component
 
 import android.content.Context
 import com.ninjaturtles.travelarassistant.di.module.ApplicationModule
+import com.ninjaturtles.travelarassistant.di.module.DataSourceModule
 import com.ninjaturtles.travelarassistant.di.module.ViewModelModule
 import dagger.BindsInstance
 import dagger.Component
@@ -11,7 +12,8 @@ import javax.inject.Singleton
 @Component(
     modules = [
         ApplicationModule::class,
-        ViewModelModule::class
+        ViewModelModule::class,
+        DataSourceModule::class
     ]
 )
 interface ApplicationComponent {
@@ -20,4 +22,6 @@ interface ApplicationComponent {
     interface Factory {
         fun create(@BindsInstance context: Context): ApplicationComponent
     }
+
+    fun mapComponent(): MapComponent.Factory
 }
