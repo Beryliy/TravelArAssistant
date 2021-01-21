@@ -5,10 +5,11 @@ buildscript {
     ext.appcompat_version = '1.2.0'
     ext.material_version = '1.2.1'
     ext.constraint_layout_version = '2.0.4'
-    ext.ar_core_version = '1.22.0'
     ext.dagger_version = '2.31'
     ext.navigation_version = '2.3.2'
     ext.mapbox_version = '9.5.0'
+    ext.location_version = '17.1.0'
+    ext.mapbox_anotation_plagin_version = '0.9.0'
 
     repositories {
         google()
@@ -27,6 +28,7 @@ allprojects {
     repositories {
         google()
         jcenter()
+        mavenCentral()
         maven {
             url 'https://api.mapbox.com/downloads/v2/releases/maven'
             authentication {
