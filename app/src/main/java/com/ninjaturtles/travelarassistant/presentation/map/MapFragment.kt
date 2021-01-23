@@ -12,6 +12,7 @@ import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapboxMap
@@ -35,6 +36,8 @@ class MapFragment : BaseFragment() {
     private lateinit var symbolManager: SymbolManager
     private lateinit var destinationMarker: Symbol
     private lateinit var hoveringMarker: ImageView
+    private lateinit var origin: LatLng
+    private lateinit var destination: LatLng
 
     @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
 
@@ -70,6 +73,10 @@ class MapFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mapView.onCreate(savedInstanceState)
+        open_ar_b.setOnClickListener {
+            checkCameraPermission()
+
+        }
         mapView.getMapAsync { mapboxMap ->
             mapboxMap.setStyle(Style.MAPBOX_STREETS) { style ->
                 initStyle(style)
@@ -128,6 +135,11 @@ class MapFragment : BaseFragment() {
                     viewModel.startTrackLocation()
                 }
             }
+            CAMERA_PERMISSION -> {
+                if(grantResults.isNotEmpty() && grantResults.first() == PackageManager.PERMISSION_GRANTED) {
+                    openArView()
+                }
+            }
         }
     }
 
@@ -148,6 +160,17 @@ class MapFragment : BaseFragment() {
         }
     }
 
+    private fun checkCameraPermission() {
+        if(ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED) {
+            openArView()
+        } else {
+            requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION)
+        }
+    }
+
     private fun initStyle(style: Style) {
         BitmapUtils.getBitmapFromDrawable(
             ResourcesCompat.getDrawable(resources, R.drawable.ic_marker, null)
@@ -163,6 +186,7 @@ class MapFragment : BaseFragment() {
 
     private fun drawMarker(location: Location) {
         if(::symbolManager.isInitialized) {
+            origin = LatLng(location.latitude, location.longitude)
             symbolManager.create(
                 SymbolOptions().withLatLng(LatLng(location))
                     .withIconImage("originMarker")
@@ -172,6 +196,7 @@ class MapFragment : BaseFragment() {
 
     private fun placeMarker() {
         mapboxMap?.cameraPosition?.target?.let { location ->
+            destination = location
             destinationMarker = symbolManager.create(
                 SymbolOptions().withLatLng(LatLng(location))
                     .withIconImage("destinationMarker")
@@ -184,7 +209,18 @@ class MapFragment : BaseFragment() {
         symbolManager.delete(destinationMarker)
     }
 
+    private fun openArView() {
+        val arguments = Bundle().apply {
+            putFloat("originLongitude", origin.longitude.toFloat())
+            putFloat("originLatitude", origin.latitude.toFloat())
+            putFloat("destinationLongitude", destination.longitude.toFloat())
+            putFloat("destinationLatitude", destination.latitude.toFloat())
+        }
+        findNavController().navigate(R.id.action_mapFragment_to_ARFragment, arguments)
+    }
+
     companion object {
         private const val ACCESS_LOCATION_PERMISSION = 1
+        private const val CAMERA_PERMISSION = 2
     }
 }
