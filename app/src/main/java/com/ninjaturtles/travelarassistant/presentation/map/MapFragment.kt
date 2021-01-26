@@ -1,6 +1,7 @@
 package com.ninjaturtles.travelarassistant.presentation.map
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -35,7 +36,6 @@ class MapFragment : BaseFragment() {
     private lateinit var style: Style
     private lateinit var symbolManager: SymbolManager
     private lateinit var destinationMarker: Symbol
-    private lateinit var hoveringMarker: ImageView
     private lateinit var origin: LatLng
     private lateinit var destination: LatLng
 
@@ -75,7 +75,6 @@ class MapFragment : BaseFragment() {
         mapView.onCreate(savedInstanceState)
         open_ar_b.setOnClickListener {
             checkCameraPermission()
-
         }
         mapView.getMapAsync { mapboxMap ->
             mapboxMap.setStyle(Style.MAPBOX_STREETS) { style ->
@@ -133,6 +132,8 @@ class MapFragment : BaseFragment() {
             ACCESS_LOCATION_PERMISSION -> {
                 if(grantResults.isNotEmpty() && grantResults.first() == PackageManager.PERMISSION_GRANTED) {
                     viewModel.startTrackLocation()
+                } else {
+                    showPermissionDeniedDialog()
                 }
             }
             CAMERA_PERMISSION -> {
@@ -217,6 +218,13 @@ class MapFragment : BaseFragment() {
             putFloat("destinationLatitude", destination.latitude.toFloat())
         }
         findNavController().navigate(R.id.action_mapFragment_to_ARFragment, arguments)
+    }
+
+    private fun showPermissionDeniedDialog() {
+        AlertDialog.Builder(requireContext())
+            .setMessage(resources.getString(R.string.location_permission_denied))
+            .setCancelable(true)
+            .show()
     }
 
     companion object {
