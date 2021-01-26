@@ -27,6 +27,8 @@ import com.mapbox.services.android.navigation.v5.route.RouteListener
 import com.mapbox.services.android.navigation.v5.routeprogress.ProgressChangeListener
 import com.mapbox.services.android.navigation.v5.routeprogress.RouteProgress
 import com.mapbox.vision.VisionManager
+import com.mapbox.vision.ar.FenceVisualParams
+import com.mapbox.vision.ar.LaneVisualParams
 import com.mapbox.vision.ar.VisionArManager
 import com.mapbox.vision.ar.core.models.ManeuverType
 import com.mapbox.vision.ar.core.models.Route
@@ -108,6 +110,8 @@ class ARFragment : BaseFragment(), ProgressChangeListener, OffRouteListener {
 
         VisionArManager.create(VisionManager)
         ar_view.setArManager(VisionArManager)
+        ar_view.setFenceVisible(true)
+        ar_view.setLaneVisualParams(LaneVisualParams())
     }
 
     private fun startNavigation() {
@@ -127,7 +131,6 @@ class ARFragment : BaseFragment(), ProgressChangeListener, OffRouteListener {
                     Toast.makeText(requireContext(), "Can not calculate the route requested", Toast.LENGTH_SHORT).show()
                 } else {
                     mapboxNavigation.startNavigation(response!!.routes()[0])
-
                     val route = response.routes()[0]
                     
 // Set route progress.

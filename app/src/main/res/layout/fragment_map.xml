@@ -32,6 +32,14 @@
             />
 
         <Button
+            android:id="@+id/open_ar_b"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/to_ar_navigation"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Button
             android:id="@+id/place_marker_b"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
