@@ -3,8 +3,12 @@ package com.ninjaturtles.travelarassistant.presentation.map
 import android.Manifest
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Context.LOCATION_SERVICE
+import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +16,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapboxMap
@@ -35,6 +42,24 @@ class MapFragment : BaseFragment() {
     private lateinit var symbolManager: SymbolManager
     private var originMarker: Symbol? = null
     private var destinationMarker: Symbol? = null
+    private val locationManager: LocationManager by lazy {
+        requireContext().getSystemService(LOCATION_SERVICE) as LocationManager
+    }
+    private val settingsClient: SettingsClient by lazy {
+        LocationServices.getSettingsClient(requireContext())
+    }
+    private val locaitonRequest: LocationRequest by lazy {
+        LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 10_000L
+            fastestInterval = 2_000L
+        }
+    }
+    private val locationSettingsRequest: LocationSettingsRequest by lazy {
+        LocationSettingsRequest.Builder()
+            .addLocationRequest(locaitonRequest)
+            .build()
+    }
 
     @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
 
@@ -130,6 +155,7 @@ class MapFragment : BaseFragment() {
         when(requestCode) {
             ACCESS_LOCATION_PERMISSION -> {
                 if(grantResults.isNotEmpty() && grantResults.first() == PackageManager.PERMISSION_GRANTED) {
+                    turnOnGps()
                     viewModel.startTrackLocation()
                 } else {
                     showLocationPermissionDeniedDialog()
@@ -167,6 +193,7 @@ class MapFragment : BaseFragment() {
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED) {
+            turnOnGps()
             viewModel.startTrackLocation()
         } else {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), ACCESS_LOCATION_PERMISSION)
@@ -181,6 +208,24 @@ class MapFragment : BaseFragment() {
             viewModel.openArView()
         } else {
             requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION)
+        }
+    }
+
+    private fun turnOnGps() {
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            settingsClient.checkLocationSettings(locationSettingsRequest)
+                .addOnFailureListener{ exception ->
+                    when((exception as ApiException).statusCode) {
+                        LocationSettingsStatusCodes.RESOLUTION_REQUIRED -> try {
+                            (exception as ResolvableApiException).startResolutionForResult(
+                                requireActivity(),
+                                1
+                            )
+                        } catch(sie: IntentSender.SendIntentException) {
+                            Log.i("map", "PendingIntent unable to execute request.")
+                        }
+                    }
+                }
         }
     }
 
