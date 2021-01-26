@@ -2,4 +2,7 @@
     <string name="app_name">TravelARAssistant</string>
     <string name="place_marker">Place marker</string>
     <string name="change_destination">Change destination point</string>
+    <string name="to_ar_navigation">To AR navigation</string>
+    <string name="location_permission_denied">Location permission denied. Navigation will not be available.</string>
+    <string name="Ok">OK</string>
 </resources>
