@@ -4,6 +4,7 @@ package com.ninjaturtles.travelarassistant.presentation.map
 import android.location.Location
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
+import androidx.databinding.ObservableInt
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -37,12 +38,16 @@ class MapViewModel @Inject constructor(
     val removeDestinationMarkerLD: LiveData<Unit> = removeDestinationMarkerMLD
     val hoveringMarkerVisible = ObservableBoolean(true)
     val buttonText = ObservableField(resourcesDataSource.getString(R.string.place_marker))
+    val arBtnClickable = ObservableBoolean(false)
+    val arBtnColor = ObservableInt(resourcesDataSource.getColor(R.color.grey))
 
     init {
 
     }
 
     fun startTrackLocation() {
+        arBtnClickable.set(true)
+        arBtnColor.set(resourcesDataSource.getColor(R.color.blue))
         viewModelScope.launch(coroutineContext) {
             locationDataSource.trackLocation().collect { locationResult ->
                 when(locationResult) {
