@@ -4,12 +4,10 @@ import android.Manifest
 import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
@@ -35,9 +33,8 @@ class MapFragment : BaseFragment() {
     private var mapboxMap: MapboxMap? = null
     private lateinit var style: Style
     private lateinit var symbolManager: SymbolManager
-    private lateinit var destinationMarker: Symbol
-    private lateinit var origin: LatLng
-    private lateinit var destination: LatLng
+    private var originMarker: Symbol? = null
+    private var destinationMarker: Symbol? = null
 
     @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
 
@@ -54,8 +51,8 @@ class MapFragment : BaseFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this, viewModelFactory)[MapViewModel::class.java]
         Mapbox.getInstance(requireContext(), BuildConfig.MAPBOX_DOWNLOADS_TOKEN)
+        viewModel = ViewModelProvider(this, viewModelFactory)[MapViewModel::class.java]
         observe()
     }
 
@@ -81,6 +78,8 @@ class MapFragment : BaseFragment() {
                 initStyle(style)
                 this.style = style
                 symbolManager = SymbolManager(mapView, mapboxMap, style).apply { iconAllowOverlap = true }
+                viewModel.originLD.observe(viewLifecycleOwner, ::drawOriginMarker)
+                viewModel.destinationLD.observe(viewLifecycleOwner, ::drawDestinationMarker)
             }
             this.mapboxMap = mapboxMap
 
@@ -133,21 +132,34 @@ class MapFragment : BaseFragment() {
                 if(grantResults.isNotEmpty() && grantResults.first() == PackageManager.PERMISSION_GRANTED) {
                     viewModel.startTrackLocation()
                 } else {
-                    showPermissionDeniedDialog()
+                    showLocationPermissionDeniedDialog()
                 }
             }
             CAMERA_PERMISSION -> {
                 if(grantResults.isNotEmpty() && grantResults.first() == PackageManager.PERMISSION_GRANTED) {
-                    openArView()
+                    viewModel.openArView()
+                } else {
+                    showCameraPermissionDeniedDialog()
                 }
             }
         }
     }
 
     private fun observe() {
-        viewModel.locationLD.observe(this, ::drawMarker)
         viewModel.placeMarkerLD.observe(this, { placeMarker() })
         viewModel.removeDestinationMarkerLD.observe(this, { removeDestinationMarker() })
+        viewModel.openArLD.observe(this, { originDestination ->
+            val arguments = Bundle().apply {
+                putFloat("originLongitude", originDestination.first.longitude.toFloat())
+                putFloat("originLatitude", originDestination.first.latitude.toFloat())
+                putFloat("destinationLongitude", originDestination.second.longitude.toFloat())
+                putFloat("destinationLatitude", originDestination.second.latitude.toFloat())
+            }
+            findNavController().navigate(R.id.action_mapFragment_to_ARFragment, arguments)
+        })
+        viewModel.pointsNotSelectedLD.observe(this, {
+            showPointsNotSelectedDialog()
+        })
     }
 
     private fun checkLocationPermission() {
@@ -166,7 +178,7 @@ class MapFragment : BaseFragment() {
                 requireContext(),
                 Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED) {
-            openArView()
+            viewModel.openArView()
         } else {
             requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION)
         }
@@ -185,44 +197,54 @@ class MapFragment : BaseFragment() {
         }
     }
 
-    private fun drawMarker(location: Location) {
+    private fun drawOriginMarker(location: LatLng) {
         if(::symbolManager.isInitialized) {
-            origin = LatLng(location.latitude, location.longitude)
-            symbolManager.create(
-                SymbolOptions().withLatLng(LatLng(location))
+            originMarker?.let {
+                symbolManager.delete(it)
+            }
+            originMarker = symbolManager.create(
+                SymbolOptions().withLatLng(location)
                     .withIconImage("originMarker")
             )
         }
     }
 
+    private fun drawDestinationMarker(location: LatLng) {
+        destinationMarker = symbolManager.create(
+            SymbolOptions().withLatLng(LatLng(location))
+                .withIconImage("destinationMarker")
+        )
+    }
+
     private fun placeMarker() {
         mapboxMap?.cameraPosition?.target?.let { location ->
-            destination = location
-            destinationMarker = symbolManager.create(
-                SymbolOptions().withLatLng(LatLng(location))
-                    .withIconImage("destinationMarker")
-            )
-            viewModel.destination = location
+            viewModel.setDestinationLocation(LatLng(location.latitude, location.longitude))
         }
     }
 
     private fun removeDestinationMarker() {
-        symbolManager.delete(destinationMarker)
-    }
-
-    private fun openArView() {
-        val arguments = Bundle().apply {
-            putFloat("originLongitude", origin.longitude.toFloat())
-            putFloat("originLatitude", origin.latitude.toFloat())
-            putFloat("destinationLongitude", destination.longitude.toFloat())
-            putFloat("destinationLatitude", destination.latitude.toFloat())
+        destinationMarker?.let {
+            symbolManager.delete(it)
         }
-        findNavController().navigate(R.id.action_mapFragment_to_ARFragment, arguments)
     }
 
-    private fun showPermissionDeniedDialog() {
+    private fun showLocationPermissionDeniedDialog() {
         AlertDialog.Builder(requireContext())
             .setMessage(resources.getString(R.string.location_permission_denied))
+            .setCancelable(true)
+            .show()
+    }
+
+    private fun showCameraPermissionDeniedDialog() {
+        AlertDialog.Builder(requireContext())
+            .setMessage(R.string.camera_permission_denied)
+            .setCancelable(true)
+            .show()
+    }
+
+    private fun showPointsNotSelectedDialog() {
+        AlertDialog.Builder(requireContext())
+            .setMessage(R.string.points_not_specified)
             .setCancelable(true)
             .show()
     }

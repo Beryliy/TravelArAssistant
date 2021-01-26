@@ -4,5 +4,7 @@
     <string name="change_destination">Change destination point</string>
     <string name="to_ar_navigation">To AR navigation</string>
     <string name="location_permission_denied">Location permission denied. Navigation will not be available.</string>
+    <string name="camera_permission_denied">Camera permission denied. Navigation is not available.</string>
+    <string name="points_not_specified">Origin or destination point was not specified</string>
     <string name="Ok">OK</string>
 </resources>

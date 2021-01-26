@@ -1,7 +1,6 @@
 package com.ninjaturtles.travelarassistant.presentation.map
 
 
-import android.location.Location
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
 import androidx.databinding.ObservableInt
@@ -27,14 +26,18 @@ class MapViewModel @Inject constructor(
     private val resourcesDataSource: ResourcesDataSource,
     @Named("io") private val coroutineContext: CoroutineContext
 ) : BaseViewModel() {
-    lateinit var origin: LatLng
-    lateinit var destination: LatLng
     private var placeMarkerStrategy: () -> Unit = ::placeMarker
-    private val locationMLD = MutableLiveData<Location>()
-    val locationLD: LiveData<Location> = locationMLD
+    private val originMLD = MutableLiveData<LatLng>()
+    val originLD: LiveData<LatLng> = originMLD
+    private val destinationMLD = MutableLiveData<LatLng>()
+    val destinationLD: LiveData<LatLng> = destinationMLD
     private val placeMarkerMLD = MutableLiveData<Unit>()
     val placeMarkerLD: LiveData<Unit> = placeMarkerMLD
     private val removeDestinationMarkerMLD = MutableLiveData<Unit>()
+    private val openArMLD = MutableLiveData<Pair<LatLng, LatLng>>()
+    val openArLD: LiveData<Pair<LatLng, LatLng>> = openArMLD
+    private val pointsNotSelectedMLD = MutableLiveData<Unit>()
+    val pointsNotSelectedLD: LiveData<Unit> = pointsNotSelectedMLD
     val removeDestinationMarkerLD: LiveData<Unit> = removeDestinationMarkerMLD
     val hoveringMarkerVisible = ObservableBoolean(true)
     val buttonText = ObservableField(resourcesDataSource.getString(R.string.place_marker))
@@ -42,23 +45,34 @@ class MapViewModel @Inject constructor(
     val arBtnColor = ObservableInt(resourcesDataSource.getColor(R.color.grey))
 
     init {
-
     }
 
     fun startTrackLocation() {
-        arBtnClickable.set(true)
-        arBtnColor.set(resourcesDataSource.getColor(R.color.blue))
         viewModelScope.launch(coroutineContext) {
             locationDataSource.trackLocation().collect { locationResult ->
                 when(locationResult) {
                     is LocationResult.Success -> {
                         locationResult.location?.lastLocation?.let { location ->
-                            locationMLD.postValue(location)
+                            originMLD.postValue(LatLng(location.latitude, location.longitude))
                         }
+                        arBtnClickable.set(true)
+                        arBtnColor.set(resourcesDataSource.getColor(R.color.blue))
                     }
                     is LocationResult.Failure -> {}
                 }
             }
+        }
+    }
+
+    fun setDestinationLocation(destination: LatLng) {
+        destinationMLD.postValue(destination)
+    }
+
+    fun openArView() {
+        if(originLD.value != null && destinationLD.value != null) {
+            openArMLD.postValue(Pair(originLD.value!!, destinationLD.value!!))
+        } else {
+            pointsNotSelectedMLD.postValue(Unit)
         }
     }
 
