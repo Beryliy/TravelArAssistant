@@ -48,7 +48,7 @@ class MapFragment : BaseFragment() {
     private val settingsClient: SettingsClient by lazy {
         LocationServices.getSettingsClient(requireContext())
     }
-    private val locaitonRequest: LocationRequest by lazy {
+    private val locationRequest: LocationRequest by lazy {
         LocationRequest.create().apply {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             interval = 10_000L
@@ -57,7 +57,7 @@ class MapFragment : BaseFragment() {
     }
     private val locationSettingsRequest: LocationSettingsRequest by lazy {
         LocationSettingsRequest.Builder()
-            .addLocationRequest(locaitonRequest)
+            .addLocationRequest(locationRequest)
             .build()
     }
 
@@ -214,7 +214,7 @@ class MapFragment : BaseFragment() {
     private fun turnOnGps() {
         if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             settingsClient.checkLocationSettings(locationSettingsRequest)
-                .addOnFailureListener{ exception ->
+                .addOnFailureListener { exception ->
                     when((exception as ApiException).statusCode) {
                         LocationSettingsStatusCodes.RESOLUTION_REQUIRED -> try {
                             (exception as ResolvableApiException).startResolutionForResult(
@@ -262,8 +262,7 @@ class MapFragment : BaseFragment() {
     }
 
     private fun placeMarker() {
-        mapboxMap?.cameraPosition?.target?.let { location ->
-            viewModel.setDestinationLocation(LatLng(location.latitude, location.longitude))
+        mapboxMap?.cameraPosition?.target?.let { location -> viewModel.setDestinationLocation(LatLng(location.latitude, location.longitude))
         }
     }
 

@@ -32,6 +32,8 @@ import com.mapbox.vision.ar.core.models.ManeuverType
 import com.mapbox.vision.ar.core.models.Route
 import com.mapbox.vision.ar.core.models.RoutePoint
 import com.mapbox.vision.mobile.core.interfaces.VisionEventsListener
+import com.mapbox.vision.mobile.core.models.detection.DetectionClass
+import com.mapbox.vision.mobile.core.models.detection.FrameDetections
 import com.mapbox.vision.mobile.core.models.position.GeoCoordinate
 import com.mapbox.vision.utils.VisionLogger
 import com.ninjaturtles.travelarassistant.BuildConfig
@@ -105,7 +107,17 @@ class ARFragment : BaseFragment(), ProgressChangeListener, OffRouteListener {
     private fun startVisionManager() {
         VisionManager.create()
         VisionManager.start()
-        VisionManager.visionEventsListener = object : VisionEventsListener {}
+        VisionManager.visionEventsListener = object : VisionEventsListener {
+            override fun equals(other: Any?): Boolean {
+                return super.equals(other)
+            }
+
+            override fun onFrameDetectionsUpdated(frameDetections: FrameDetections) {
+                super.onFrameDetectionsUpdated(frameDetections)
+
+                frameDetections.frame.image
+            }
+        }
 
         VisionArManager.create(VisionManager)
         ar_view.setArManager(VisionArManager)
